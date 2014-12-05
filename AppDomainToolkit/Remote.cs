@@ -124,6 +124,52 @@
         }
 
         /// <summary>
+        /// Creates a new Remote object.
+        /// </summary>
+        /// <param name="wrappedDomain">
+        /// The target AppDomain, wrapped for disposable goodness.
+        /// </param>
+        /// <param name="assemblyFullName">
+        /// The target Assembly's FullName to create.
+        /// </param>
+        /// <param name="typeFullName">
+        /// The target Type's FullName to create.
+        /// </param>
+        /// <param name="constructorArgs">
+        /// A list of constructor arguments to pass to the remote object.
+        /// </param>
+        /// <returns>
+        /// A remote proxy to an object of type T living in the target wrapped application domain.
+        /// </returns>
+        internal static Remote<T> CreateProxy(DisposableAppDomain wrappedDomain, string assemblyFullName, string typeFullName, params object[] constructorArgs)
+        {
+            if (wrappedDomain == null)
+            {
+                throw new ArgumentNullException("domain");
+            }
+            if (string.IsNullOrEmpty(assemblyFullName))
+            {
+                throw new ArgumentNullException("assemblyFullName");
+            }
+            if (string.IsNullOrEmpty(typeFullName))
+            {
+                throw new ArgumentNullException("typeFullName");
+            }
+
+            var proxy = (T)wrappedDomain.Domain.CreateInstanceAndUnwrap(
+                assemblyFullName,
+                typeFullName,
+                false,
+                BindingFlags.CreateInstance,
+                null,
+                constructorArgs,
+                null,
+                null);
+
+            return new Remote<T>(wrappedDomain, proxy);
+        }
+
+        /// <summary>
         /// Creates a new remote.
         /// </summary>
         /// <param name="domain">
@@ -141,6 +187,42 @@
             if (domain == null)
             {
                 throw new ArgumentNullException("domain");
+            }
+
+            return CreateProxy(new DisposableAppDomain(domain), constructorArgs);
+        }
+
+        /// <summary>
+        /// Creates a new Remote object.
+        /// </summary>
+        /// <param name="wrappedDomain">
+        /// The target AppDomain, wrapped for disposable goodness.
+        /// </param>
+        /// <param name="assemblyFullName">
+        /// The target Assembly's FullName to create.
+        /// </param>
+        /// <param name="typeFullName">
+        /// The target Type's FullName to create.
+        /// </param>
+        /// <param name="constructorArgs">
+        /// A list of constructor arguments to pass to the remote object.
+        /// </param>
+        /// <returns>
+        /// A remote proxy to an object of type T living in the target application domain.
+        /// </returns>
+        public static Remote<T> CreateProxy(AppDomain domain, string assemblyFullName, string typeFullName, params object[] constructorArgs)
+        {
+            if (domain == null)
+            {
+                throw new ArgumentNullException("domain");
+            }
+            if (string.IsNullOrEmpty(assemblyFullName))
+            {
+                throw new ArgumentNullException("assemblyFullName");
+            }
+            if (string.IsNullOrEmpty(typeFullName))
+            {
+                throw new ArgumentNullException("typeFullName");
             }
 
             return CreateProxy(new DisposableAppDomain(domain), constructorArgs);
